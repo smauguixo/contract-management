@@ -1,5 +1,7 @@
+# scripts/utils.py
 import os
-from IPython.display import display, HTML
+import polars as pl
+from IPython.display import display, HTML, Markdown
 
 # -------------------------------------
 # Constants
@@ -23,20 +25,24 @@ AUSENCIAS_COLS = PROFESSIONALS_COLS + [
     'rel_2141_AUSENCIA',
 ]
 
-# Paths to data sources and output files
-FACILITY_ID_PATH = os.path.join('data', 'facility_id_lookup.csv')
-ABSENCE_REPORT_PATH = os.path.join('data', 'absence_report', '2024-08', 'rel_2141_2024_08.xlsx')
-EXCLUDED_PROFESSIONALS_PATH = os.path.join('output', 'absence_report', '001_excluded_professionals.csv')
-CONSOLIDATION_FAILURES_PATH = os.path.join('output', 'absence_report', '002_consolidation_failures.csv')
-ABSENCES_CONSOLIDATED_PATH = os.path.join('output', 'absence_report', '003_absences_consolidated.csv')
-PROFESSIONALS_CONSOLIDATED_PATH = os.path.join('output', 'absence_report', '004_professionals_consolidated.csv')
+# Paths to data sources and output files (now using Parquet)
+FACILITY_ID_PATH = os.path.join('data', 'facility_id_lookup.parquet')
+ABSENCE_REPORT_PATH = os.path.join('data', 'absence_report', '2024-08', 'rel_2141_2024_08.parquet')
+EXCLUDED_PROFESSIONALS_PATH = os.path.join('output', 'absence_report', '001_excluded_professionals.parquet')
+CONSOLIDATION_FAILURES_PATH = os.path.join('output', 'absence_report', '002_consolidation_failures.parquet')
+ABSENCES_CONSOLIDATED_PATH = os.path.join('output', 'absence_report', '003_absences_consolidated.parquet')
+PROFESSIONALS_CONSOLIDATED_PATH = os.path.join('output', 'absence_report', '004_professionals_consolidated.parquet')
 
 
 # -------------------------------------
 # General Utility Functions
 # -------------------------------------
-def rename_absence_report_columns(absence_report):
-    absence_report.rename(columns={
+def rename_absence_report_columns(absence_report_df):
+    """
+    Renames the columns of the absence report DataFrame to a standardized format.
+    Accepts a Polars DataFrame or LazyFrame.
+    """
+    column_mapping = {
         'CHAPA': 'rel_2141_prof_ID',
         'NOME': 'rel_2141_NOME',
         'FUNCAO': 'rel_2141_CARGO',
@@ -49,39 +55,56 @@ def rename_absence_report_columns(absence_report):
         'LICINICIO': 'rel_2141_LICINICIO',
         'LICFIM': 'rel_2141_LICFIM',
         'STATUS': 'rel_2141_AUSENCIA',
-    }, inplace=True)
-    return absence_report
-
+    }
+    return absence_report_df.rename(column_mapping)
 
 # -------------------------------------
-# Display Configuration
+# Notebook Display Configuration
 # -------------------------------------
-# Ajusta o tamanho da fonte para todos os blocos de Markdown no notebook
-display(HTML("""
+def configure_notebook_display():
+    """Injects CSS to standardize display styles in the notebook."""
+    display(HTML("""
     <style>
-        /* Ajusta a fonte de todo o conteúdo Markdown */
+        /* Adjusts the font size for all Markdown blocks */
         div.text_cell_render {
             font-size: 16px;
         }
-    </style>
-"""))
-
-# Ensure consistent font size across all DataFrames for better readability
-display(HTML("""
-    <style>
+        /* Ensures a consistent font size for all DataFrames */
         table.dataframe {
             font-size: 12px;
         }
     </style>
-"""))
-
-# Custom display function to adjust the width of specific DataFrames
-def display_custom(df, class_name="custom_df"):
-    display(HTML(f"""
-    <style>
-        .{class_name} {{
-            width: 100% !important;
-        }}
-    </style>
-    {df.to_html(classes=class_name)}
     """))
+
+def display_message(message: str, level: int = 4):
+    """
+    Displays a formatted message in the notebook using Markdown.
+    Level corresponds to the number of '#' characters (e.g., level=4 is '####').
+    """
+    if not isinstance(level, int) or not (1 <= level <= 6):
+        level = 4  # Default to a reasonable level if input is invalid
+    
+    markdown_prefix = '#' * level
+    display(Markdown(f"{markdown_prefix} {message}"))
+
+def display_df(df: pl.DataFrame):
+    """
+    Displays a Polars DataFrame with Datetime/Date columns cleanly formatted as 'YYYY-MM-DD'.
+    This is for presentation only and does not alter the original DataFrame.
+    """
+    if not isinstance(df, pl.DataFrame):
+        display(df)
+        return
+
+    # Identify date/datetime columns to format for display
+    dt_cols = [c for c, dtype in df.schema.items() if isinstance(dtype, (pl.Datetime, pl.Date))]
+
+    if not dt_cols:
+        display(df)
+        return
+        
+    # Create a temporary DataFrame for display purposes, casting to Date for a cleaner visual
+    df_to_display = df.with_columns([
+        pl.col(c).cast(pl.Date).alias(c) for c in dt_cols
+    ])
+    display(df_to_display)
