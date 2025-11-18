@@ -2,7 +2,7 @@
 
 > **Author's Note:** This project is a fork of an original implementation that used `pandas` with CSV/Excel files. The goal of this fork is not merely to modernize the tech stack, but to serve as a *case study* on the implications, trade-offs, and opportunities that arise when migrating a data pipeline from an *eager* paradigm (Pandas) to a *lazy*, column-oriented one (Polars/Parquet).
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/smauguixo/contract-management.git/main?labpath=absence_report_data_processing.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/smauguixo/contract-management/polars-version?labpath=absence_report_data_processing.ipynb)
 
 ## Project Overview
 
