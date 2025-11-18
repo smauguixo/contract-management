@@ -1,5 +1,9 @@
 # Healthcare Absence Management Pipeline
 
+> **Alternative Version Available:** This `main` branch showcases the data pipeline implemented with **Pandas**. For a demonstration of modern, high-performance data processing, a complete refactoring of this project using **Polars and Parquet** is available on a separate branch.
+>
+> **[Click here to view the Polars & Parquet version](https://github.com/smauguixo/contract-management/tree/polars-version)**
+
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/smauguixo/contract-management.git/main?labpath=absence_report_data_processing.ipynb)
 
 Effective management of healthcare contracts and personnel is crucial for ensuring high-quality public health services. In large municipal health systems, this task involves processing vast amounts of data from multiple sources, often leading to inefficiencies and errors when done manually. This project presents a comprehensive data pipeline developed to automate the processing and consolidation of absence reports and professional records for healthcare workers within a public-private partnership framework.
